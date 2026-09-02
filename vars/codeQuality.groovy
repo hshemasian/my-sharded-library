@@ -1,12 +1,13 @@
 def sonarCreateProject(String projectKey) {
-        withSonarQubeEnv('SonarQubeScanner') {
-            sh "pwd"
-        }
+    withSonarQubeEnv('SonarQube') { 
+        sh "pwd"
+    }
 }
 
 def sonarLocalScan() {
-    def scannerHome = tool 'SonarQubeScanner'
-    withSonarQubeEnv('SonarQubeScanner') {
-        sh"pwd"
+    def scannerHome = tool 'SonarQubeScanner' 
+    
+    withSonarQubeEnv('SonarQube') {
+        sh "pwd"
     }
 }
