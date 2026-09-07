@@ -34,8 +34,10 @@ def call(Map config = [:]) {
             stage('Code Quality - Lint & Sonar') {
                 container('android-builder') {
                     echo "--- הרצת בדיקת איכות קוד (Android Lint) ---"
-                    // הרצת Lint מובנה של אנדרואיד
-                    sh './gradlew lint'
+                    dir('android') {
+                        sh 'chmod +x gradlew'
+                        sh './gradlew lint'
+                    }
                 }
             }
 
@@ -54,7 +56,10 @@ def call(Map config = [:]) {
             stage('QA & Unit Tests') {
                 container('android-builder') {
                     echo "--- הרצת בדיקות יחידה (Unit Tests) ---"
-                    sh './gradlew test'
+                    dir('android') {
+                        sh 'chmod +x gradlew'
+                        sh './gradlew test'
+                    }
                 }
                 
                 // איסוף והצגת תוצאות הבדיקות בממשק של Jenkins
@@ -64,13 +69,16 @@ def call(Map config = [:]) {
             stage('Build APK') {
                 container('android-builder') {
                     echo "--- קימפול האפליקציה ויצירת קובץ APK ---"
-                    sh './gradlew assembleDebug'
+                    dir('android') {
+                        sh 'chmod +x gradlew'
+                        sh './gradlew assembleDebug'
+                    }
                 }
             }
 
             stage('Archive Artifacts') {
                 echo "--- שמירת קובץ ה-APK להורדה ---"
-                // שמירת קובץ ה-APK שנוצר כדי שתוכל להוריד אותו ולשחק בו במחשב
+                // שמירת קובץ ה-APK שנוצר כדי שתוכל להוריד אותו
                 archiveArtifacts artifacts: '**/build/outputs/apk/debug/*.apk', allowEmptyArchive: false
             }
         }
