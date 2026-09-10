@@ -1,12 +1,10 @@
 def call(Map config = [:]) {
     container('android-builder') {
-        echo "--- הרצת בדיקות יחידה (Unit Tests) ---"
+        echo "--- הרצת בדיקות יחידה ---"
         dir('android') {
             sh 'chmod +x gradlew'
             sh './gradlew test'
         }
     }
-    
-    // איסוף תוצאות הטסטים
     junit allowEmptyResults: true, testResults: '**/build/test-results/**/*.xml'
 }
