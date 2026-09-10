@@ -2,8 +2,11 @@ def call(Map config = [:]) {
     def projectKey = config.get('sonarProjectKey', env.APP_NAME ?: 'android-app')
 
     container('android-builder') {
-        echo "--- הרצת בדיקת איכות קוד (Android Lint & SonarQube) ---"
+        echo "--- הרצת בדיקת איכות קוד (Flutter & Android Lint & SonarQube) ---"
         
+        // 0. סנכרון תלויות Flutter משורש הפרויקט (חובה כדי ליצור את קובצי ה-plugin loader ש-Gradle דורש)
+        sh 'flutter pub get'
+
         dir('android') {
             sh 'chmod +x gradlew'
             
