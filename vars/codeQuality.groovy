@@ -1,22 +1,27 @@
-def sonarCreateProject(String projectKey) {
-    withSonarQubeEnv('SonarQubeScanner') {
-        sh """
-            curl -s -u \$SONAR_AUTH_TOKEN: \
-            -X POST "\$SONAR_HOST_URL/api/projects/create" \
-            -d "project=${projectKey}&name=${projectKey}" || true
-        """
-    }
-}
+def call(Map config = [:]) {
+    def projectKey = config.get('sonarProjectKey', env.APP_NAME ?: 'android-app')
 
-def sonarLocalScan(String projectKey = env.APP_NAME) {
-    def scannerHome = tool 'SonarQubeScanner'
-    withSonarQubeEnv('SonarQubeScanner') {
-        sh """
-            ${scannerHome}/bin/sonar-scanner \
-            -Dsonar.projectKey=${projectKey} \
-            -Dsonar.projectName=${projectKey} \
-            -Dsonar.sources=. \
-            -Dsonar.sourceEncoding=UTF-8
-        """
+    container('android-builder') {
+        echo "--- הרצת בדיקת איכות קוד (Android Lint & SonarQube) ---"
+        
+        dir('android') {
+            sh 'chmod +x gradlew'
+            
+            // 1. הרצת Android Lint
+            sh './gradlew lint'
+
+            // 2. הרצת סריקת SonarQube דרך Gradle עם הגדרות הסביבה מ-Jenkins
+            withSonarQubeEnv('SonarQubeScanner') {
+                // במידה ויש צורך ביצירת הפרויקט מראש דרך API:
+                sh """
+                    curl -s -u \$SONAR_AUTH_TOKEN: \
+                    -X POST "\$SONAR_HOST_URL/api/projects/create" \
+                    -d "project=${projectKey}&name=${projectKey}" || true
+                """
+
+                // הרצת הסריקה בפועל באמצעות ה-Gradle Wrapper
+                sh "./gradlew sonar -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectKey}"
+            }
+        }
     }
 }
