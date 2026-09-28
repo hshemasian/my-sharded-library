@@ -2,10 +2,9 @@ def call(Map config = [:]) {
     def type = config.get('type', 'android')
 
     if (type == 'python') {
-        echo '=== Running Code Quality & Syntax Check (Python) ==='
-        sh 'flake8 app.py || python3 -m py_compile app.py'
+        echo '=== Running Code Quality & Syntax Check (Python via Docker) ==='
+        sh 'docker run --rm -v $WORKSPACE:/app -w /app python:3.10-slim python3 -m py_compile app.py'
     } else {
-        // הקוד הקיים שלך עבור Android / Flutter / SonarQube
         def projectKey = config.get('sonarProjectKey', env.APP_NAME ?: 'android-app')
 
         container('android-builder') {
