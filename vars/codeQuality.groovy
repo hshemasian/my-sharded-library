@@ -1,29 +1,29 @@
 def call(Map config = [:]) {
-    def projectKey = config.get('sonarProjectKey', env.APP_NAME ?: 'android-app')
+    def type = config.get('type', 'android')
 
-    container('android-builder') {
-        echo "--- הרצת בדיקת איכות קוד (Flutter & Android Lint & SonarQube) ---"
-        
-        // 0. סנכרון תלויות Flutter משורש הפרויקט (חובה כדי ליצור את קובצי ה-plugin loader ש-Gradle דורש)
-        sh 'flutter pub get'
+    if (type == 'python') {
+        echo '=== Running Code Quality & Syntax Check (Python) ==='
+        sh 'flake8 app.py || python3 -m py_compile app.py'
+    } else {
+        // הקוד הקיים שלך עבור Android / Flutter / SonarQube
+        def projectKey = config.get('sonarProjectKey', env.APP_NAME ?: 'android-app')
 
-        dir('android') {
-            sh 'chmod +x gradlew'
-            
-            // 1. הרצת Android Lint
-            sh './gradlew lint'
+        container('android-builder') {
+            echo "--- הרצת בדיקת איכות קוד (Flutter & Android Lint & SonarQube) ---"
+            sh 'flutter pub get'
 
-            // 2. הרצת סריקת SonarQube דרך Gradle עם הגדרות הסביבה מ-Jenkins
-            withSonarQubeEnv('SonarQubeScanner') {
-                // במידה ויש צורך ביצירת הפרויקט מראש דרך API:
-                sh """
-                    curl -s -u \$SONAR_AUTH_TOKEN: \
-                    -X POST "\$SONAR_HOST_URL/api/projects/create" \
-                    -d "project=${projectKey}&name=${projectKey}" || true
-                """
+            dir('android') {
+                sh 'chmod +x gradlew'
+                sh './gradlew lint'
 
-                // הרצת הסריקה בפועל באמצעות ה-Gradle Wrapper
-                sh "./gradlew sonar -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectKey}"
+                withSonarQubeEnv('SonarQubeScanner') {
+                    sh """
+                        curl -s -u \$SONAR_AUTH_TOKEN: \
+                        -X POST "\$SONAR_HOST_URL/api/projects/create" \
+                        -d "project=${projectKey}&name=${projectKey}" || true
+                    """
+                    sh "./gradlew sonar -Dsonar.projectKey=${projectKey} -Dsonar.projectName=${projectKey}"
+                }
             }
         }
     }
