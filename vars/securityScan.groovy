@@ -1,4 +1,3 @@
-cat << 'EOF' > ~/my-sharded-library/vars/securityScan.groovy
 def call(Object args = [:]) {
     if (args instanceof CharSequence) {
         def imageName = args.toString()
@@ -13,4 +12,3 @@ def call(Object args = [:]) {
         archiveArtifacts artifacts: 'trivy-android-report.json', allowEmptyArchive: true
     }
 }
-EOF
